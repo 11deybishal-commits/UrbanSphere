@@ -22,7 +22,13 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/urbansphe
     console.log('✅ Connected to MongoDB');
     seedDatabase();
   })
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+    console.log('⚠️  Please setup MongoDB:');
+    console.log('   1. Install MongoDB or use MongoDB Atlas');
+    console.log('   2. Add MONGODB_URI to .env file');
+    console.log('   3. See QUICK_START.md for instructions');
+  });
 
 app.use('/api/locations', locationRoutes);
 app.use('/api/hospitals', hospitalRoutes);
