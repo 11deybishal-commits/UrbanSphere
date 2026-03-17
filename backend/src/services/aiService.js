@@ -1,11 +1,16 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
-});
+}) : null;
 
 export const processNaturalLanguageQuery = async (query) => {
   try {
+    if (!openai) {
+      console.warn('OpenAI not configured, using fallback');
+      return parseFallbackQuery(query);
+    }
+
     const prompt = `You are an AI assistant for a smart city platform. Convert the following natural language query into structured search parameters.
 
 Query: "${query}"
@@ -32,16 +37,41 @@ Return only valid JSON, no markdown.`;
     return JSON.parse(content);
   } catch (error) {
     console.error('AI Query Processing Error:', error);
+    return parseFallbackQuery(query);
+  }
+};
+
+function parseFallbackQuery(query) {
+  const lowerQuery = query.toLowerCase();
+  
+  if (lowerQuery.includes('hospital')) {
     return {
-      type: 'general',
+      type: 'hospital',
+      filters: { sortBy: 'rating' },
+      intent: 'find hospitals'
+    };
+  } else if (lowerQuery.includes('traffic') || lowerQuery.includes('route')) {
+    return {
+      type: 'traffic',
+      filters: { sortBy: 'congestionLevel' },
+      intent: 'find traffic information'
+    };
+  } else {
+    return {
+      type: 'location',
       filters: {},
       intent: query
     };
   }
-};
+}
 
 export const generateBuildingInsights = async (building) => {
   try {
+    if (!openai) {
+      console.warn('OpenAI not configured, using fallback insights');
+      return generateFallbackInsights(building);
+    }
+
     const prompt = `Generate smart city insights for this building:
 
 Name: ${building.name}
@@ -78,11 +108,58 @@ Return JSON format:
     return JSON.parse(content);
   } catch (error) {
     console.error('AI Insights Error:', error);
-    return {
-      summary: `${building.name} is currently operational`,
-      recommendation: "Monitor regularly for optimal performance",
-      metrics: ["Status: Active", "Performance: Normal", "Capacity: Available"],
-      prediction: "Stable operations expected"
-    };
+    return generateFallbackInsights(building);
   }
 };
+
+function generateFallbackInsights(building) {
+  const insights = {
+    residential: {
+      summary: `${building.name} is a residential building with ${building.population || 0} residents`,
+      recommendation: "Maintain regular inspections and ensure all amenities are functional",
+      metrics: [
+        `Population: ${building.population || 0}`,
+        `Floors: ${building.metadata?.floors || 'N/A'}`,
+        `Year Built: ${building.metadata?.yearBuilt || 'N/A'}`
+      ],
+      prediction: "Stable occupancy expected with seasonal variations"
+    },
+    hospital: {
+      summary: `${building.name} is operating at ${building.currentPatients ? Math.round((building.currentPatients / building.capacity) * 100) : 0}% capacity`,
+      recommendation: building.emergencyLoad === 'high' ? "Consider diverting non-emergency cases to nearby facilities" : "Continue normal operations",
+      metrics: [
+        `Capacity: ${building.capacity || 0} beds`,
+        `Current Patients: ${building.currentPatients || 0}`,
+        `Wait Time: ${building.estimatedWaitTime || 0} minutes`
+      ],
+      prediction: "Patient load expected to remain stable"
+    },
+    commercial: {
+      summary: `${building.name} is a commercial building with active business operations`,
+      recommendation: "Monitor foot traffic and optimize energy consumption during peak hours",
+      metrics: [
+        `Floors: ${building.metadata?.floors || 'N/A'}`,
+        `Capacity: ${building.metadata?.capacity || 'N/A'}`,
+        `Status: Operational`
+      ],
+      prediction: "Increased activity expected during business hours"
+    },
+    park: {
+      summary: `${building.name} is a public park providing green space for the community`,
+      recommendation: "Regular maintenance and monitoring of visitor capacity recommended",
+      metrics: [
+        "Status: Open to public",
+        "Maintenance: Regular",
+        "Accessibility: High"
+      ],
+      prediction: "Higher usage expected during weekends and holidays"
+    }
+  };
+
+  return insights[building.type] || {
+    summary: `${building.name} is currently operational`,
+    recommendation: "Monitor regularly for optimal performance",
+    metrics: ["Status: Active", "Performance: Normal", "Capacity: Available"],
+    prediction: "Stable operations expected"
+  };
+}

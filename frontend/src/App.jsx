@@ -1,30 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import SearchBar from './components/SearchBar';
-import Sidebar from './components/Sidebar';
 import CityScene from './components/CityScene';
 import AIInsightsPanel from './components/AIInsightsPanel';
 import Footer from './components/Footer';
-import StatsCards from './components/StatsCards';
-import MiniMap from './components/MiniMap';
-import LiveMetrics from './components/LiveMetrics';
-import ControlPanel from './components/ControlPanel';
-import NotificationPanel from './components/NotificationPanel';
 import { locationAPI, analyticsAPI } from './services/api';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [buildings, setBuildings] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [insightsPanelOpen, setInsightsPanelOpen] = useState(false);
-  const [visualSettings, setVisualSettings] = useState({
-    particles: true,
-    dataStreams: true,
-    energyBeams: true,
-    holographicRings: true
-  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -32,13 +20,14 @@ function App() {
 
   const loadData = async () => {
     try {
+      setLoading(true);
       const [locationsRes, analyticsRes] = await Promise.all([
         locationAPI.getAll(),
         analyticsAPI.get()
       ]);
       
       if (locationsRes.data.success) {
-        setBuildings(locationsRes.data.data);
+        setBuildings(locationsRes.data.data || []);
       }
       
       if (analyticsRes.data.success) {
@@ -46,6 +35,24 @@ function App() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      setBuildings([]);
+      setAnalytics({
+        metrics: {
+          totalPopulation: 0,
+          activeVehicles: 0,
+          averageAQI: 0,
+          hospitalOccupancy: 0,
+          energyConsumption: 0,
+          waterUsage: 0
+        },
+        trends: {
+          trafficGrowth: 0,
+          pollutionChange: 0,
+          populationGrowth: 0
+        }
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,45 +61,39 @@ function App() {
     setInsightsPanelOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-darker via-dark to-darker flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-primary text-lg font-semibold">Loading UrbanSphere...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full bg-gradient-to-br from-darker via-dark to-darker overflow-hidden">
-      <Navbar />
+      <Navbar analytics={analytics} />
       
       <SearchBar onSearch={(query) => console.log('Search:', query)} />
       
-      <NotificationPanel />
-      
-      <div className="flex h-[calc(100vh-80px)]">
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          analytics={analytics}
+      <main className="w-full h-[calc(100vh-80px)] relative">
+        <CityScene 
+          buildings={buildings}
+          onBuildingClick={handleBuildingClick}
+          selectedBuilding={selectedBuilding}
         />
         
-        <main className="flex-1 relative">
-          <StatsCards analytics={analytics} />
-          
-          <CityScene 
-            buildings={buildings}
-            onBuildingClick={handleBuildingClick}
-            selectedBuilding={selectedBuilding}
-            visualSettings={visualSettings}
-          />
-          
-          <MiniMap buildings={buildings} selectedBuilding={selectedBuilding} />
-          <LiveMetrics />
-          <ControlPanel onSettingsChange={setVisualSettings} />
-          
-          <AnimatePresence>
-            {insightsPanelOpen && selectedBuilding && (
-              <AIInsightsPanel 
-                building={selectedBuilding}
-                onClose={() => setInsightsPanelOpen(false)}
-              />
-            )}
-          </AnimatePresence>
-        </main>
-      </div>
+        <AnimatePresence>
+          {insightsPanelOpen && selectedBuilding && (
+            <AIInsightsPanel 
+              building={selectedBuilding}
+              onClose={() => setInsightsPanelOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+      </main>
       
       <Footer />
     </div>

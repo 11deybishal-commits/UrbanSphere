@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Sparkles } from 'lucide-react';
 import { aiAPI } from '../services/api';
@@ -32,7 +32,7 @@ const SearchBar = ({ onSearch }) => {
     >
       <form onSubmit={handleSearch} className="relative">
         <div className="relative group">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
           
           <div className="relative bg-dark/90 backdrop-blur-xl rounded-2xl border border-primary/30 shadow-2xl overflow-hidden">
             <div className="flex items-center px-6 py-4">
@@ -42,8 +42,8 @@ const SearchBar = ({ onSearch }) => {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask AI: 'best hospital nearby' or 'least traffic route to airport'..."
-                className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
+                placeholder="Ask AI: 'best hospital nearby' or 'least traffic route'..."
+                className="flex-1 bg-transparent outline-none text-white placeholder-gray-400 text-sm"
               />
               
               <motion.button

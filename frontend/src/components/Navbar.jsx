@@ -1,13 +1,12 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Layers, Activity, Settings, Bell } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
-const Navbar = () => {
+const Navbar = ({ analytics }) => {
   return (
     <motion.nav 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="h-16 bg-gradient-to-r from-dark/90 to-darker/90 backdrop-blur-lg border-b border-primary/20 px-6 flex items-center justify-between"
+      className="h-16 bg-gradient-to-r from-dark/95 to-darker/95 backdrop-blur-lg border-b border-primary/10 px-8 flex items-center justify-between"
     >
       <div className="flex items-center gap-3">
         <motion.div
@@ -25,29 +24,22 @@ const Navbar = () => {
         </div>
       </div>
       
-      <div className="flex items-center gap-4">
-        <NavButton icon={<Activity />} label="Analytics" />
-        <NavButton icon={<Bell />} label="Alerts" badge={3} />
-        <NavButton icon={<Settings />} label="Settings" />
+      <div className="flex items-center gap-6">
+        <StatItem label="Population" value={analytics?.metrics?.totalPopulation?.toLocaleString() || '0'} />
+        <div className="w-px h-8 bg-primary/20"></div>
+        <StatItem label="AQI" value={Math.round(analytics?.metrics?.averageAQI || 0)} />
+        <div className="w-px h-8 bg-primary/20"></div>
+        <StatItem label="Vehicles" value={analytics?.metrics?.activeVehicles?.toLocaleString() || '0'} />
       </div>
     </motion.nav>
   );
 };
 
-const NavButton = ({ icon, label, badge }) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    className="relative p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-    title={label}
-  >
-    {icon}
-    {badge && (
-      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center">
-        {badge}
-      </span>
-    )}
-  </motion.button>
+const StatItem = ({ label, value }) => (
+  <div className="text-center">
+    <p className="text-xs text-gray-400 mb-1">{label}</p>
+    <p className="text-sm font-bold text-primary">{value}</p>
+  </div>
 );
 
 export default Navbar;

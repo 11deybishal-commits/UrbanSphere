@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Building2, Hospital, Car, Wind } from 'lucide-react';
 
@@ -29,7 +28,7 @@ const Sidebar = ({ isOpen, onToggle, analytics }) => {
               <MetricCard
                 icon={<Hospital className="w-5 h-5" />}
                 label="Hospital Occupancy"
-                value={`${analytics?.metrics?.hospitalOccupancy || 0}%`}
+                value={`${Math.round(analytics?.metrics?.hospitalOccupancy || 0)}%`}
                 color="from-red-500 to-pink-500"
               />
               
@@ -43,7 +42,7 @@ const Sidebar = ({ isOpen, onToggle, analytics }) => {
               <MetricCard
                 icon={<Wind className="w-5 h-5" />}
                 label="Air Quality Index"
-                value={analytics?.metrics?.averageAQI || '0'}
+                value={Math.round(analytics?.metrics?.averageAQI || 0)}
                 color="from-green-500 to-emerald-500"
               />
             </div>
@@ -53,15 +52,15 @@ const Sidebar = ({ isOpen, onToggle, analytics }) => {
               <div className="space-y-2">
                 <TrendItem 
                   label="Traffic Growth" 
-                  value={analytics?.trends?.trafficGrowth?.toFixed(1) || '0'}
+                  value={(analytics?.trends?.trafficGrowth || 0).toFixed(1)}
                 />
                 <TrendItem 
                   label="Pollution Change" 
-                  value={analytics?.trends?.pollutionChange?.toFixed(1) || '0'}
+                  value={(analytics?.trends?.pollutionChange || 0).toFixed(1)}
                 />
                 <TrendItem 
                   label="Population Growth" 
-                  value={analytics?.trends?.populationGrowth?.toFixed(1) || '0'}
+                  value={(analytics?.trends?.populationGrowth || 0).toFixed(1)}
                 />
               </div>
             </div>
